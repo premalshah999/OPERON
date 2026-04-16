@@ -82,7 +82,7 @@ Fin/
 ### Step 1 — Clone and enter the project
 
 ```bash
-git clone <repo-url> && cd Fin
+git clone https://github.com/premalshah999/OPERON.git && cd OPERON
 ```
 
 ### Step 2 — Set up environment files

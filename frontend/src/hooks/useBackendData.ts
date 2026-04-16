@@ -21,13 +21,18 @@ export function useBackendData() {
           api.samples(),
         ]);
 
+        // Only overwrite synthetic data if the backend has actually processed complaints.
+        // An empty DB returns total_complaints=0 — we don't want to wipe the synthetic seed.
+        const hasRealData = (stats?.total_complaints ?? 0) > 0;
         store().set({
-          backendStats: stats,
-          backendTrends: trends,
-          processedComplaints: complaints.complaints ?? [],
-          totalProcessed: complaints.total ?? 0,
           sampleComplaints: samples.samples ?? [],
           lastSync: new Date(),
+          ...(hasRealData && {
+            backendStats:        stats,
+            backendTrends:       trends,
+            processedComplaints: complaints.complaints ?? [],
+            totalProcessed:      complaints.total ?? 0,
+          }),
         });
       } catch {
         store().set({ backendConnected: false });
@@ -38,14 +43,19 @@ export function useBackendData() {
 
     const poll = setInterval(async () => {
       try {
-        const [stats, trends, complaints] = await Promise.all([api.stats(), api.trends(14), api.complaints(50)]);
+        const [stats, trends, complaints] = await Promise.all([
+          api.stats(), api.trends(14), api.complaints(50),
+        ]);
+        const hasRealData = (stats?.total_complaints ?? 0) > 0;
         store().set({
-          backendStats: stats,
-          backendTrends: trends,
-          processedComplaints: complaints.complaints ?? [],
-          totalProcessed: complaints.total ?? 0,
           backendConnected: true,
           lastSync: new Date(),
+          ...(hasRealData && {
+            backendStats:        stats,
+            backendTrends:       trends,
+            processedComplaints: complaints.complaints ?? [],
+            totalProcessed:      complaints.total ?? 0,
+          }),
         });
       } catch {
         store().set({ backendConnected: false });
